@@ -1,5 +1,5 @@
 import unittest
-from textnode import TextNode, TextType, text_node_to_html_node
+from textnode import TextNode, TextType, text_node_to_html_node, split_text_nodes
 
 class TestTextNode(unittest.TestCase):
     def test_eq(self):
@@ -65,6 +65,63 @@ class TestTextNode(unittest.TestCase):
         html_node = text_node_to_html_node(node)
         self.assertEqual(html_node.tag, "img")
         self.assertEqual(html_node.to_html(), '<img src="img.jpg" alt="image alt text">')
+
+    def test_inline_code(self):
+        node = TextNode("This is text with a `code block` word", TextType.TEXT)
+        new_nodes = split_text_nodes([node], "`", TextType.CODE)
+        test_nodes = [
+            TextNode("This is text with a ", TextType.TEXT),
+            TextNode("code block", TextType.CODE),
+            TextNode(" word", TextType.TEXT),
+        ]
+        self.assertEqual(new_nodes, test_nodes)
+    
+    def test_multiple_delimiters(self):
+        node = TextNode("How to use `if`, `elif`, and `else` statements", TextType.TEXT)
+        new_nodes = split_text_nodes([node], "`", TextType.CODE)
+        test_nodes = [
+            TextNode("How to use ", TextType.TEXT),
+            TextNode("if", TextType.CODE),
+            TextNode(", ", TextType.TEXT),
+            TextNode("elif", TextType.CODE),
+            TextNode(", and ", TextType.TEXT),
+            TextNode("else", TextType.CODE),
+            TextNode(" statements", TextType.TEXT)
+        ]
+        self.assertEqual(new_nodes, test_nodes)
+    
+    def test_delimiter_at_start_and_end(self):
+        node = TextNode("**THE END**", TextType.TEXT)
+        new_nodes = split_text_nodes([node], "**", TextType.BOLD)
+        test_nodes = [TextNode("THE END", TextType.BOLD)]
+        self.assertEqual(new_nodes, test_nodes)
+    
+    def test_multiple_nodes(self):
+        node1 = TextNode("Nobody:", TextType.TEXT)
+        node2 = TextNode("Tall People: _touches ceiling_", TextType.TEXT)
+        node3 = TextNode("Short People: _rolls eyes_", TextType.TEXT)
+        new_nodes = split_text_nodes([node1, node2, node3], "_", TextType.ITALIC)
+        test_nodes = [
+            TextNode("Nobody:", TextType.TEXT),
+            TextNode("Tall People: ", TextType.TEXT),
+            TextNode("touches ceiling", TextType.ITALIC),
+            TextNode("Short People: ", TextType.TEXT),
+            TextNode("rolls eyes", TextType.ITALIC)
+        ]
+        self.assertEqual(new_nodes, test_nodes)
+    
+    def test_delim_bold_and_italic(self):
+        node = TextNode("**bold** and _italic_", TextType.TEXT)
+        new_nodes = split_text_nodes([node], "**", TextType.BOLD)
+        new_nodes = split_text_nodes(new_nodes, "_", TextType.ITALIC)
+        self.assertListEqual(
+            [
+                TextNode("bold", TextType.BOLD),
+                TextNode(" and ", TextType.TEXT),
+                TextNode("italic", TextType.ITALIC),
+            ],
+            new_nodes,
+        )
 
 
 if __name__ == "__main__":

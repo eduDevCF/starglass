@@ -40,8 +40,42 @@ def text_node_to_html_node(text_node) -> LeafNode:
         case TextType.CODE:
             return LeafNode("code", text_node.text)
         case TextType.LINK:
+            if text_node.url is None:
+                raise ValueError("invalid URL")
             return LeafNode("a", text_node.text, {"href": text_node.url})
         case TextType.IMAGE:
+            if text_node.url is None:
+                raise ValueError("invalid URL")
             return LeafNode("img", None, props={"src": text_node.url, "alt": text_node.text})
         case _:
             raise Exception("textNodes must have a text_type")
+
+def split_text_nodes(old_nodes: list[TextNode], delimiter: str, text_type: TextType) -> list[TextNode]:
+    new_nodes= []
+    # match delimiter:
+    #     case "**":
+    #         text_type = TextType.BOLD
+    #     case "_":
+    #         text_type = TextType.ITALIC
+    #     case "`":
+    #         text_type = TextType.CODE
+    #     case _:
+    #         raise Exception("invalid delimiter")
+
+    for node in old_nodes:
+        if node.text_type != TextType.TEXT:
+            new_nodes.append(node)
+        else:
+            split_text = node.text.split(delimiter)
+            if len(split_text) % 2 != 1:
+                raise Exception("unmatched delimiter")
+            for i in range(len(split_text)):
+                if split_text[i] == "":
+                    continue
+                if i % 2 == 0:
+                    text_node = TextNode(split_text[i], TextType.TEXT)
+                else:
+                    text_node = TextNode(split_text[i], text_type)
+                new_nodes.append(text_node)
+
+    return new_nodes
