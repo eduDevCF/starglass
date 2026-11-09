@@ -1,22 +1,22 @@
 import re
 from enum import Enum
+from htmlnode import HTMLNode, LeafNode, ParentNode
 
 class BlockType(Enum):
-    P = "paragraph"
-    H1 = "heading1"
-    H2 = "heading2"
-    H3 = "heading3"
-    H4 = "heading4"
-    H5 = "heading5"
-    H6 = "heading6"
+    P = "p"
+    H1 = "h1"
+    H2 = "h2"
+    H3 = "h3"
+    H4 = "h4"
+    H5 = "h5"
+    H6 = "h6"
     CODE = "code"
-    QUOTE = "quote"
-    UL = "unordered list"
-    OL = "ordered list"
+    QUOTE = "blockquote"
+    UL = "ul"
+    OL = "ol"
 
 
 def extract_code_blocks(text: str) -> list[str]:
-    #Todo: Write tests
     blocks = []
     code_blocks = text.split("```")
 
@@ -33,7 +33,6 @@ def extract_code_blocks(text: str) -> list[str]:
 
 
 def markdown_to_blocks(text: str) -> list[str]:
-    #Todo: UPDATE TESTS to include code blocks
     code_blocks: list[str] = extract_code_blocks(text)
 
     blocks = []
@@ -52,7 +51,6 @@ def markdown_to_blocks(text: str) -> list[str]:
 
 
 def block_to_block_type(text: str) -> BlockType:
-    # Todo: write tests
     if text.startswith("###### "):
         return BlockType.H6
     if text.startswith("##### "):
@@ -85,4 +83,46 @@ def extract_markdown_links(text: str) -> list[tuple]:
     matches = re.findall(r"(?<!!)\[([^\[\]]*)\]\(([^\(\)]*)\)", text)
     return matches
 
+
+def markdown_to_html(markdown: str) -> ParentNode:
+    html_block_nodes = []
+    blocks = markdown_to_blocks(markdown)
+    for block in blocks:
+        blocktype = block_to_block_type(block)
+        text = scrub_block_md(blocktype, markdown)
+        # Add code to handle CODE blocks differently <pre><code></code></pre>
+        # Add the CODE block child directly to html_block_nodes
+        text_nodes = text_to_textnodes(text)
+        child_nodes = []
+        for text_node in text_nodes:
+            if text_node.text_type == TextType.CODE:
+            child_nodes.append(text_node_to_html_node(text_node))
+        html_block_nodes.append(HTMLNode(blocktype, None, child_nodes))
+    return ParentNode("div", html_block_nodes)
+
+
+def scrub_block_md(blocktype: BlockType, text: str) -> str:
+    match blocktype:
+        case BlockType.P:
+            return text
+        case BlockType.H6:
+            return text[7:]
+        case BlockType.H5:
+            return text[6:]
+        case BlockType.H4:
+            return text[5:]
+        case BlockType.H3:
+            return text[4:]
+        case BlockType.H2:
+            return text[3:]
+        case BlockType.H1:
+            return text[2:]
+        case BlockType.CODE:
+            return text[3:-3]
+        case BlockType.QUOTE:
+            return text[1:]
+        case BlockType.UL:
+            return text[2:]
+        case BlockType.OL:
+            return text[2:]
 

@@ -56,15 +56,6 @@ def text_node_to_html_node(text_node) -> LeafNode:
 
 def split_text_nodes(old_nodes: list[TextNode], delimiter: str, text_type: TextType) -> list[TextNode]:
     new_nodes= []
-    # match delimiter:
-    #     case "**":
-    #         text_type = TextType.BOLD
-    #     case "_":
-    #         text_type = TextType.ITALIC
-    #     case "`":
-    #         text_type = TextType.CODE
-    #     case _:
-    #         raise Exception("invalid delimiter")
 
     for node in old_nodes:
         if node.text_type != TextType.TEXT:
