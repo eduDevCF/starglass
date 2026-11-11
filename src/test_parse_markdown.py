@@ -149,8 +149,7 @@ else:
             LeafNode(None, "!!!")
         ]
         result = text_to_children(text)
-        print("EXPECTED: ", children)
-        print("RESULT: ", result)
+
         self.assertEqual(len(result), len(children))
         self.assertEqual(result[0].tag, children[0].tag)
         self.assertEqual(result[0].value, children[0].value)
