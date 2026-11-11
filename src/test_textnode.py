@@ -1,7 +1,7 @@
 import unittest
 from textnode import (
     TextNode, TextType, text_node_to_html_node, split_text_nodes,
-    split_image_nodes, split_link_nodes, text_to_textnodes
+    split_image_nodes, split_link_nodes, text_to_text_nodes
 )
 
 class TestTextNode(unittest.TestCase):
@@ -156,9 +156,9 @@ class TestTextNode(unittest.TestCase):
         ]
         self.assertListEqual(test_nodes, new_nodes)
     
-    def test_text_to_textnodes(self):
+    def test_text_to_text_nodes(self):
         text = "This is **text** with an _italic_ word and a `code block` and an ![obi wan image](https://i.imgur.com/fJRm4Vk.jpeg) and a [link](https://boot.dev)"
-        new_nodes = text_to_textnodes(text)
+        new_nodes = text_to_text_nodes(text)
         test_nodes = [
             TextNode("This is ", TextType.TEXT),
             TextNode("text", TextType.BOLD),

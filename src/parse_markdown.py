@@ -78,7 +78,7 @@ def block_to_block_type(text: str) -> BlockType:
 def extract_markdown_images(text: str) -> list[tuple]:
     matches = re.findall(r"!\[([^\[\]]*)\]\(([^\(\)]*)\)", text)
     return matches
-    
+
 
 def extract_markdown_links(text: str) -> list[tuple]:
     matches = re.findall(r"(?<!!)\[([^\[\]]*)\]\(([^\(\)]*)\)", text)
@@ -86,16 +86,20 @@ def extract_markdown_links(text: str) -> list[tuple]:
 
 
 def markdown_to_html_node(markdown: str) -> ParentNode:
-    from textnode import text_to_textnodes, text_node_to_html_node
+    
     html_block_nodes = []
     blocks = markdown_to_blocks(markdown)
+
     for block in blocks:
         blocktype = block_to_block_type(block)
-        text = scrub_block_md(blocktype, block)
+        text = strip_md(blocktype, block)
+
         # CODE block is handled differently for its formatting: <pre><code></code></pre>
         if blocktype == BlockType.CODE:
             html_block_nodes.append(ParentNode("pre", [LeafNode("code", text)]))
             continue
+
+        # OLs and ULs are handled differently: <ol><li></li><li></li></ol>
         if blocktype == BlockType.OL or blocktype == BlockType.UL:
             if blocktype == BlockType.OL:
                 toss, *split_list = re.split(r"\d. ", text)
@@ -103,25 +107,35 @@ def markdown_to_html_node(markdown: str) -> ParentNode:
                 toss, *split_list = re.split(r"- ", text)
             li_nodes = []
             for item in split_list:
-                text_nodes = text_to_textnodes(item.rstrip())
-                child_nodes = []
-                for text_node in text_nodes:
-                    child_nodes.append(text_node_to_html_node(text_node))
-                if len(child_nodes) > 0:
-                    li_nodes.append(ParentNode("li", child_nodes))
-            if len(child_nodes) > 0:
+                children: list[HTMLNode] = text_to_children(item)
+                if len(children) > 0:
+                    li_nodes.append(ParentNode("li", children))
+            if len(li_nodes) > 0:
                 html_block_nodes.append(ParentNode(blocktype.value, li_nodes))
             continue
-        text_nodes = text_to_textnodes(text)
-        child_nodes = []
-        for text_node in text_nodes:
-            child_nodes.append(text_node_to_html_node(text_node))
-        if len(child_nodes) > 0:
-            html_block_nodes.append(ParentNode(blocktype.value, child_nodes))
+        
+        # All other blocks are more straightforward
+        children: list[HTMLNode] = text_to_children(text)
+        if len(children) > 0:
+            html_block_nodes.append(ParentNode(blocktype.value, children))
+
     return ParentNode("div", html_block_nodes)
 
 
-def scrub_block_md(blocktype: BlockType, text: str) -> str:
+def text_to_children(text: str) -> list[HTMLNode]:
+    from textnode import text_to_text_nodes, text_node_to_html_node
+    # OL and UL list items need this check
+    if text[-1] == "\n":
+        text = text[:-1]
+
+    child_nodes: list = []
+    text_nodes: list[textnode] = text_to_text_nodes(text)
+    for text_node in text_nodes:
+        child_nodes.append(text_node_to_html_node(text_node))
+    return child_nodes
+
+
+def strip_md(blocktype: BlockType, text: str) -> str:
     text = text.strip()
     match blocktype:
         case BlockType.P:

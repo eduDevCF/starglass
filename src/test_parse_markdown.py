@@ -1,8 +1,9 @@
 import unittest
+from htmlnode import LeafNode
 from parse_markdown import (
     extract_markdown_images, extract_markdown_links, BlockType,
     markdown_to_blocks, extract_code_blocks, block_to_block_type,
-    markdown_to_html_node
+    markdown_to_html_node, text_to_children
 )
 
 class TestParseMarkdown(unittest.TestCase):
@@ -12,12 +13,14 @@ class TestParseMarkdown(unittest.TestCase):
         )
         self.assertListEqual([("image", "https://i.imgur.com/zjjcJKZ.png")], matches)
 
+
     def test_extract_markdown_links(self):
         matches = extract_markdown_links(
             "This is text with an [link text](https://imgur.com)"
         )
         self.assertListEqual([("link text", "https://imgur.com")], matches)
-    
+
+
     def test_extract_code_blocks(self):
         md = """## Heading2 about `if... else` blocks
 
@@ -52,6 +55,7 @@ else:
         self.assertEqual(blocks[0], "## Heading2 about `if... else` blocks\n\nThis is how to use conditional logic in Python.\n\n")
         self.assertEqual(blocks[1], md_code)
         self.assertEqual(blocks[2], "\n\n    You can also add an `elif` statement in there.")
+
 
     def test_markdown_to_blocks(self):
         md = """
@@ -111,6 +115,7 @@ else:
         self.assertEqual(blocks[2], md_code)
         self.assertEqual(blocks[3], "You can also add an `elif` statement in there.")
 
+
     def test_block_to_block_type(self):
         h1 = "# Heading 1"
         h2 = "## Heading 2"
@@ -134,6 +139,35 @@ else:
         self.assertEqual(block_to_block_type(ul), BlockType.UL)
         self.assertEqual(block_to_block_type(ol), BlockType.OL)
         self.assertEqual(block_to_block_type(p), BlockType.P)
+
+
+    def test_text_to_children(self):
+        text = "This is **important**!!!\n"
+        children = [
+            LeafNode(None, "This is "),
+            LeafNode("b", "important"),
+            LeafNode(None, "!!!")
+        ]
+        result = text_to_children(text)
+        print("EXPECTED: ", children)
+        print("RESULT: ", result)
+        self.assertEqual(len(result), len(children))
+        self.assertEqual(result[0].tag, children[0].tag)
+        self.assertEqual(result[0].value, children[0].value)
+        self.assertEqual(result[0].children, children[0].children)
+        self.assertEqual(result[0].props, children[0].props)
+        self.assertEqual(result[1].tag, children[1].tag)
+        self.assertEqual(result[1].value, children[1].value)
+        self.assertEqual(result[1].children, children[1].children)
+        self.assertEqual(result[1].props, children[1].props)
+        self.assertEqual(result[2].tag, children[2].tag)
+        self.assertEqual(result[2].value, children[2].value)
+        self.assertEqual(result[2].children, children[2].children)
+        self.assertEqual(result[2].props, children[2].props)
+        
+        
+
+
 
     def test_paragraphs(self):
         md = """
