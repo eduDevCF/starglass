@@ -41,6 +41,10 @@ def main():
         generate_page(from_path, template_path, dest_path)
 
 
+# def generate_pages_recursive(from_path, template_path, to_path):
+
+
+
 def is_run_from_root():
     cwd = os.getcwd()
     src_path = os.path.join(cwd, "src")
@@ -50,9 +54,8 @@ def is_run_from_root():
 
 
 def empty_public_dir(public_path: str) -> list[str]:
-    if not os.path.exists(public_path):
-        raise Exception("public directory does not exist")
-    
+    check_paths_exist([public_path])
+
     contents = os.listdir(public_path)
 
     if len(contents) != 0:
@@ -71,11 +74,14 @@ def empty_public_dir(public_path: str) -> list[str]:
     return contents
 
 
-def copy_folders(src_dir, dst_dir):
-    if not os.path.exists(src_dir):
-        raise Exception(f"SRC_DIR does not exist: {src_dir}")
-    if not os.path.exists(dst_dir):
-        raise Exception(f"DST_DIR does not exist: {dst_dir}")
+def check_paths_exist(paths: list[str]) -> None:
+    for i in range(len(paths)):
+        if not os.path.exists(paths[i]):
+            raise Exception(f"PATH {i+1} does not exist: {path[i]}")
+
+
+def copy_folders(src_dir: str, dst_dir: str) -> None:
+    check_paths_exist([src_dir, dst_dir])
 
     contents = os.listdir(src_dir)
     print(f"CONTENTS of {src_dir}: {contents}")
@@ -97,10 +103,7 @@ def copy_folders(src_dir, dst_dir):
 
 
 def generate_page(from_path: str, template_path: str, dest_path: str) -> None:
-    if not os.path.exists(from_path) or not os.path.exists(template_path):
-        raise Exception(f"ERROR: from_path does not exist: {from_path}")
-    if not os.path.exists(template_path):
-        raise Exception(f"ERROR: template_path does not exist: {template_path}")
+    check_paths_exist([from_path, template_path])
     
     print(f"Generating page from {from_path} to {dest_path} using {template_path}.")
     
