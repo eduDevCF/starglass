@@ -1,22 +1,24 @@
 import os
 import shutil
+import sys
 from textnode import TextType, TextNode
 from parse_markdown import markdown_to_html_node, extract_title
 
 def main():
-    # new_node = TextNode("My boot.dev project", TextType.LINK, "https://github.com/eduDevCF/starglass")
-    # print(new_node)
+    basepath = "/"
+    if len(sys.argv) >= 2:
+        basepath = sys.argv[1]
 
     # Capture abspaths for the static and public directories
     if not is_run_from_root():
         raise Exception("Error: main.py must be run from the project's root directory")
     static_path = os.path.abspath("./static")
-    public_path = os.path.abspath("./public")
+    public_path = os.path.abspath("./docs")
     template_path = os.path.abspath("template.html")
     content_path = os.path.abspath("./content")
     print(f"PATHS:\n static - {static_path}\n public - {public_path}\n template - {template_path}\n content - {content_path}\n")
 
-    # Empty the public folder and copy contents from static
+    # Empty the public folder (now called "/docs") and copy contents from static
     print("STARTING to empty public dir: ", public_path)
     public_contents = empty_public_dir(public_path)
     if len(public_contents) == 0:
@@ -26,11 +28,11 @@ def main():
     else:
         print("ERROR: Public dir failed to empty")
 
-    print("GENERATING pages from /content to /public")
-    generate_pages_recursive(content_path, template_path, public_path)
+    print("GENERATING pages from /content to /docs")
+    generate_pages_recursive(content_path, template_path, public_path, basepath)
 
 
-def generate_pages_recursive(src_dir, template_path, dst_dir):
+def generate_pages_recursive(src_dir: str, template_path: str, dst_dir: str, basepath: str) -> None:
     check_paths_exist([src_dir, template_path])
     contents = os.listdir(src_dir)
     print(f"CONTENTS of {src_dir}: {contents}")
@@ -40,13 +42,13 @@ def generate_pages_recursive(src_dir, template_path, dst_dir):
             if content[-3:] == ".md":
                 public_name = content[:-3] + ".html"
                 public_path = os.path.join(dst_dir, public_name)
-                generate_page(content_path, template_path, public_path)
+                generate_page(content_path, template_path, public_path, basepath)
                 print(f"GENERATED PAGE: {content_path} to {public_path}")
         elif os.path.isdir(content_path):
             new_dst_path = os.path.join(dst_dir, content)
             new_src_path = os.path.join(src_dir, content)
             print(f"CALLING generate_pages_recursive on {new_src_path} and {new_dst_path}")
-            generate_pages_recursive(new_src_path, template_path, new_dst_path)
+            generate_pages_recursive(new_src_path, template_path, new_dst_path, basepath)
         else:
             print(f"ATTN: {content_path} is not a file nor a directory")
     print("DONE with", src_dir)
@@ -84,7 +86,7 @@ def empty_public_dir(public_path: str) -> list[str]:
 def check_paths_exist(paths: list[str]) -> None:
     for i in range(len(paths)):
         if not os.path.exists(paths[i]):
-            raise Exception(f"PATH {i+1} does not exist: {path[i]}")
+            raise Exception(f"PATH {i+1} does not exist: {paths[i]}")
 
 
 def copy_folders(src_dir: str, dst_dir: str) -> None:
@@ -109,7 +111,7 @@ def copy_folders(src_dir: str, dst_dir: str) -> None:
     print("DONE with", src_dir)
 
 
-def generate_page(from_path: str, template_path: str, dest_path: str) -> None:
+def generate_page(from_path: str, template_path: str, dest_path: str, basepath: str) -> None:
     check_paths_exist([from_path, template_path])
     
     print(f"Generating page from {from_path} to {dest_path} using {template_path}.")
@@ -123,6 +125,8 @@ def generate_page(from_path: str, template_path: str, dest_path: str) -> None:
     content_html = markdown_to_html_node(markdown).to_html()
     title = extract_title(markdown)
     page_html = template_html.replace("{{ Title }}", title).replace("{{ Content }}", content_html)
+    page_html = page_html.replace('href="/', 'href="' + basepath)
+    page_html = page_html.replace('src="/', 'src="' + basepath)
 
     dest_dir_path = os.path.dirname(dest_path)
     if not os.path.exists(dest_dir_path):
