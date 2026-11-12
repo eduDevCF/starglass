@@ -86,11 +86,13 @@ def extract_markdown_links(text: str) -> list[tuple]:
 
 
 def extract_title(markdown: str) -> str:
-    pre, tag, post = markdown.partition("# ")
-    if not post:
-        raise Exception("ERROR: No h1 title found in markdown")
-    title, new_line, rest = post.partition("\n\n")
-    return title.strip()
+    title: str = ""
+    text_blocks = markdown.split("\n\n")
+    for block in text_blocks:
+        lstrip_text = block.lstrip()
+        if lstrip_text.startswith("# "):
+            return lstrip_text[2:].strip()
+    raise Exception("ERROR: No h1 title found in markdown")
 
 
 def markdown_to_html_node(markdown: str) -> ParentNode:

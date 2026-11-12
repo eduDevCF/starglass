@@ -169,7 +169,7 @@ else:
         long_md = "# Title Here\n\nRest of the Text\n\n# Second Title?\n\n## Heading 2\n\nJust a paragraph"
         no_h1 = "This is just text without an h1 heading. \n\n## With a level 2 heading for some reason"
         blank_title = "For some reason there is text before an empty h1 title. \n\n#    \n\nWas that just a typo?"
-        white_space = "#      Free Bird!!!  \t   "
+        white_space = "\t#      Free Bird!!!     "
         success = extract_title(long_md)
         empty_str = extract_title(blank_title)
         clipped = extract_title(white_space)
