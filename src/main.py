@@ -26,12 +26,19 @@ def main():
     else:
         print("ERROR: Public dir failed to empty")
     
-    # Generate public/index.html from content/index.md
-    from_file = "index.md"
-    from_path = os.path.join(content_path, from_file)
-    dest_file = "index.html"
-    dest_path = os.path.join(public_path, dest_file)
-    generate_page(from_path, template_path, dest_path)
+    content_file_paths = [
+        "index.md", 
+        "blog/glorfindel/index.md",
+        "blog/tom/index.md",
+        "blog/majesty/index.md",
+        "contact/index.md"
+    ]
+
+    for file_path in content_file_paths:
+        from_path = os.path.join(content_path, file_path)
+        mid_file_path = os.path.join(os.path.dirname(file_path), "index.html")
+        dest_path = os.path.join(public_path, mid_file_path)
+        generate_page(from_path, template_path, dest_path)
 
 
 def is_run_from_root():
@@ -107,6 +114,9 @@ def generate_page(from_path: str, template_path: str, dest_path: str) -> None:
     title = extract_title(markdown)
     page_html = template_html.replace("{{ Title }}", title).replace("{{ Content }}", content_html)
 
+    dest_dir_path = os.path.dirname(dest_path)
+    if not os.path.exists(dest_dir_path):
+        os.makedirs(dest_dir_path, exist_ok=True)
     with open(dest_path, "w") as f:
         num_chars = f.write(page_html)
     
