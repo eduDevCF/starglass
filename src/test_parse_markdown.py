@@ -3,7 +3,7 @@ from htmlnode import LeafNode
 from parse_markdown import (
     extract_markdown_images, extract_markdown_links, BlockType,
     markdown_to_blocks, extract_code_blocks, block_to_block_type,
-    markdown_to_html_node, text_to_children
+    markdown_to_html_node, text_to_children, extract_title
 )
 
 class TestParseMarkdown(unittest.TestCase):
@@ -165,7 +165,18 @@ else:
         self.assertEqual(result[2].props, children[2].props)
         
         
-
+    def test_extract_title(self):
+        long_md = "# Title Here\n\nRest of the Text\n\n# Second Title?\n\n## Heading 2\n\nJust a paragraph"
+        no_h1 = "This is just text without an h1 heading. \n\n## With a level 2 heading for some reason"
+        blank_title = "For some reason there is text before an empty h1 title. \n\n#    \n\nWas that just a typo?"
+        white_space = "#      Free Bird!!!  \t   "
+        success = extract_title(long_md)
+        empty_str = extract_title(blank_title)
+        clipped = extract_title(white_space)
+        self.assertRaises(Exception, extract_title, no_h1)
+        self.assertEqual(success, "Title Here")
+        self.assertEqual(empty_str, "")
+        self.assertEqual(clipped, "Free Bird!!!")
 
 
     def test_paragraphs(self):
