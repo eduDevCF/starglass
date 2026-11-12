@@ -25,24 +25,31 @@ def main():
         copy_folders(static_path, public_path)
     else:
         print("ERROR: Public dir failed to empty")
-    
-    content_file_paths = [
-        "index.md", 
-        "blog/glorfindel/index.md",
-        "blog/tom/index.md",
-        "blog/majesty/index.md",
-        "contact/index.md"
-    ]
 
-    for file_path in content_file_paths:
-        from_path = os.path.join(content_path, file_path)
-        mid_file_path = os.path.join(os.path.dirname(file_path), "index.html")
-        dest_path = os.path.join(public_path, mid_file_path)
-        generate_page(from_path, template_path, dest_path)
+    print("GENERATING pages from /content to /public")
+    generate_pages_recursive(content_path, template_path, public_path)
 
 
-# def generate_pages_recursive(from_path, template_path, to_path):
-
+def generate_pages_recursive(src_dir, template_path, dst_dir):
+    check_paths_exist([src_dir, template_path])
+    contents = os.listdir(src_dir)
+    print(f"CONTENTS of {src_dir}: {contents}")
+    for content in contents:
+        content_path = os.path.join(src_dir, content)
+        if os.path.isfile(content_path):
+            if content[-3:] == ".md":
+                public_name = content[:-3] + ".html"
+                public_path = os.path.join(dst_dir, public_name)
+                generate_page(content_path, template_path, public_path)
+                print(f"GENERATED PAGE: {content_path} to {public_path}")
+        elif os.path.isdir(content_path):
+            new_dst_path = os.path.join(dst_dir, content)
+            new_src_path = os.path.join(src_dir, content)
+            print(f"CALLING generate_pages_recursive on {new_src_path} and {new_dst_path}")
+            generate_pages_recursive(new_src_path, template_path, new_dst_path)
+        else:
+            print(f"ATTN: {content_path} is not a file nor a directory")
+    print("DONE with", src_dir)
 
 
 def is_run_from_root():
